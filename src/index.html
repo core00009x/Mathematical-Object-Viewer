@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Visualizador de Objetos Matemáticos</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+        <link rel="stylesheet" href="style/style.css">
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>Visualizador de Objetos Matemáticos</h1>
+                <p class="subtitle">
+                    Explore uma coleção de objetos matemáticos com renderização
+                    3D em tempo real.
+                </p>
+            </header>
+
+            <div class="main-content">
+                <div class="viewer-container">
+                    <div id="math-canvas"></div>
+                    <div class="loading" id="loading-message">
+                        Inicializando visualizador 3D...
+                    </div>
+                    <div class="stats-bar" id="stats-bar">
+                        FPS: 0 | Objetos: 0 | Vértices: 0
+                    </div>
+                </div>
+
+                <div class="controls-panel">
+                    <h2 class="section-title">Categorias</h2>
+                    <div class="category-selector">
+                        <button
+                            class="category-btn active"
+                            data-category="fractals"
+                        >
+                            Fractais
+                        </button>
+                        <button class="category-btn" data-category="surfaces">
+                            Superfícies
+                        </button>
+                        <button class="category-btn" data-category="vector">
+                            Campos Vetoriais
+                        </button>
+                        <button class="category-btn" data-category="chaos">
+                            Sistemas Caóticos
+                        </button>
+                        <button class="category-btn" data-category="polyhedra">
+                            Poliedros
+                        </button>
+                        <button class="category-btn" data-category="curves">
+                            Curvas
+                        </button>
+                    </div>
+
+                    <!-- Controles de Fractais -->
+                    <div id="fractals-controls" class="controls-group">
+                        <h3 class="section-title">Fractais</h3>
+
+                        <div class="object-selector">
+                            <select class="object-select" id="fractal-type">
+                                <option value="mandelbrot">
+                                    Conjunto de Mandelbrot
+                                </option>
+                                <option value="julia">Conjunto de Julia</option>
+                                <option value="sierpinski">
+                                    Triângulo de Sierpinski
+                                </option>
+                                <option value="menger">
+                                    Esponja de Menger 3D
+                                </option>
+                                <option value="koch">
+                                    Floco de Neve de Koch
+                                </option>
+                            </select>
+                            <div
+                                class="object-description"
+                                id="fractal-description"
+                            >
+                                O conjunto de Mandelbrot é o fractal mais
+                                famoso, gerado pela iteração da função f(z) = z²
+                                + c no plano complexo.
+                            </div>
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Iterações:</label>
+                            <input
+                                type="range"
+                                id="fractal-iterations"
+                                min="10"
+                                max="300"
+                                value="100"
+                                step="10"
+                            />
+                            <span class="slider-value" id="iterations-value"
+                                >100</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Zoom:</label>
+                            <input
+                                type="range"
+                                id="fractal-zoom"
+                                min="0.1"
+                                max="10"
+                                value="1"
+                                step="0.1"
+                            />
+                            <span class="slider-value" id="zoom-value"
+                                >1.0</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Deslocamento X:</label>
+                            <input
+                                type="range"
+                                id="fractal-offset-x"
+                                min="-2"
+                                max="2"
+                                value="-0.5"
+                                step="0.05"
+                            />
+                            <span class="slider-value" id="offset-x-value"
+                                >-0.5</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Deslocamento Y:</label>
+                            <input
+                                type="range"
+                                id="fractal-offset-y"
+                                min="-2"
+                                max="2"
+                                value="0"
+                                step="0.05"
+                            />
+                            <span class="slider-value" id="offset-y-value"
+                                >0.0</span
+                            >
+                        </div>
+
+                        <div class="slider-container" id="julia-c-real-control">
+                            <label class="control-label"
+                                >Parâmetro C (Real):</label
+                            >
+                            <input
+                                type="range"
+                                id="fractal-c-real"
+                                min="-1.5"
+                                max="1.5"
+                                value="-0.7"
+                                step="0.01"
+                            />
+                            <span class="slider-value" id="c-real-value"
+                                >-0.7</span
+                            >
+                        </div>
+
+                        <div class="slider-container" id="julia-c-imag-control">
+                            <label class="control-label"
+                                >Parâmetro C (Imaginário):</label
+                            >
+                            <input
+                                type="range"
+                                id="fractal-c-imag"
+                                min="-1.5"
+                                max="1.5"
+                                value="0.27"
+                                step="0.01"
+                            />
+                            <span class="slider-value" id="c-imag-value"
+                                >0.27</span
+                            >
+                        </div>
+
+                        <div class="controls-group">
+                            <label class="control-label"
+                                >Paleta de Cores:</label
+                            >
+                            <div class="color-picker">
+                                <div
+                                    class="color-option selected"
+                                    style="
+                                        background: linear-gradient(
+                                            90deg,
+                                            #000,
+                                            #00f,
+                                            #0ff,
+                                            #0f0,
+                                            #ff0,
+                                            #f00
+                                        );
+                                    "
+                                    data-palette="0"
+                                ></div>
+                                <div
+                                    class="color-option"
+                                    style="
+                                        background: linear-gradient(
+                                            90deg,
+                                            #000,
+                                            #00f,
+                                            #0ff,
+                                            #fff
+                                        );
+                                    "
+                                    data-palette="1"
+                                ></div>
+                                <div
+                                    class="color-option"
+                                    style="
+                                        background: linear-gradient(
+                                            90deg,
+                                            #000,
+                                            #f0f,
+                                            #ff0,
+                                            #f00
+                                        );
+                                    "
+                                    data-palette="2"
+                                ></div>
+                                <div
+                                    class="color-option"
+                                    style="
+                                        background: linear-gradient(
+                                            90deg,
+                                            #000,
+                                            #0f0,
+                                            #ff0,
+                                            #0ff
+                                        );
+                                    "
+                                    data-palette="3"
+                                ></div>
+                                <div
+                                    class="color-option"
+                                    style="
+                                        background: linear-gradient(
+                                            90deg,
+                                            #000,
+                                            #800,
+                                            #f00,
+                                            #f80,
+                                            #ff0
+                                        );
+                                    "
+                                    data-palette="4"
+                                ></div>
+                            </div>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <input
+                                type="checkbox"
+                                id="fractal-smooth"
+                                checked
+                            />
+                            <label for="fractal-smooth"
+                                >Suavização de cores</label
+                            >
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn" id="random-fractal">
+                                Fractal Aleatório
+                            </button>
+                            <button class="btn btn-secondary" id="save-fractal">
+                                Capturar Tela
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Controles de Superfícies -->
+                    <div
+                        id="surfaces-controls"
+                        class="controls-group"
+                        style="display: none"
+                    >
+                        <h3 class="section-title">Superfícies Paramétricas</h3>
+
+                        <div class="object-selector">
+                            <select class="object-select" id="surface-type">
+                                <option value="torus">Toro</option>
+                                <option value="klein">Garrafa de Klein</option>
+                                <option value="mobius">Banda de Möbius</option>
+                                <option value="sphere">Esfera</option>
+                                <option value="paraboloid">
+                                    Paraboloide Hiperbólico
+                                </option>
+                                <option value="catenoid">Catenoide</option>
+                            </select>
+                            <div
+                                class="object-description"
+                                id="surface-description"
+                            >
+                                Um toro é uma superfície de revolução gerada
+                                pela rotação de um círculo em torno de um eixo
+                                coplanar que não o intersecta.
+                            </div>
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Resolução:</label>
+                            <input
+                                type="range"
+                                id="surface-resolution"
+                                min="20"
+                                max="100"
+                                value="50"
+                                step="5"
+                            />
+                            <span class="slider-value" id="resolution-value"
+                                >50</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Escala:</label>
+                            <input
+                                type="range"
+                                id="surface-scale"
+                                min="0.5"
+                                max="3"
+                                value="1"
+                                step="0.1"
+                            />
+                            <span class="slider-value" id="scale-value"
+                                >1.0</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Rotação X:</label>
+                            <input
+                                type="range"
+                                id="surface-rotation-x"
+                                min="0"
+                                max="360"
+                                value="0"
+                                step="1"
+                            />
+                            <span class="slider-value" id="rotation-x-value"
+                                >0°</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Rotação Y:</label>
+                            <input
+                                type="range"
+                                id="surface-rotation-y"
+                                min="0"
+                                max="360"
+                                value="0"
+                                step="1"
+                            />
+                            <span class="slider-value" id="rotation-y-value"
+                                >0°</span
+                            >
+                        </div>
+
+                        <div class="controls-group">
+                            <label class="control-label"
+                                >Estilo de Renderização:</label
+                            >
+                            <div class="checkbox-group">
+                                <input
+                                    type="checkbox"
+                                    id="surface-wireframe"
+                                    checked
+                                />
+                                <label for="surface-wireframe">Wireframe</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input
+                                    type="checkbox"
+                                    id="surface-solid"
+                                    checked
+                                />
+                                <label for="surface-solid"
+                                    >Superfície sólida</label
+                                >
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn" id="animate-surface">
+                                Animar Rotação
+                            </button>
+                            <button
+                                class="btn btn-secondary"
+                                id="random-surface"
+                            >
+                                Superfície Aleatória
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Controles de Campos Vetoriais -->
+                    <div
+                        id="vector-controls"
+                        class="controls-group"
+                        style="display: none"
+                    >
+                        <h3 class="section-title">Campos Vetoriais</h3>
+
+                        <div class="object-selector">
+                            <select class="object-select" id="vector-type">
+                                <option value="curl">
+                                    Campo de Rotacional
+                                </option>
+                                <option value="gravity">
+                                    Campo Gravitacional
+                                </option>
+                                <option value="spiral">Espiral 3D</option>
+                                <option value="uniform">Campo Uniforme</option>
+                                <option value="dipole">Campo de Dipolo</option>
+                            </select>
+                            <div
+                                class="object-description"
+                                id="vector-description"
+                            >
+                                Um campo de rotacional mostra vetores que giram
+                                em torno de um ponto central, representando
+                                rotação no campo vetorial.
+                            </div>
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Densidade:</label>
+                            <input
+                                type="range"
+                                id="vector-density"
+                                min="3"
+                                max="15"
+                                value="8"
+                                step="1"
+                            />
+                            <span class="slider-value" id="density-value"
+                                >8</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Intensidade:</label>
+                            <input
+                                type="range"
+                                id="vector-intensity"
+                                min="0.1"
+                                max="3"
+                                value="1.5"
+                                step="0.1"
+                            />
+                            <span class="slider-value" id="intensity-value"
+                                >1.5</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label"
+                                >Tamanho das Setas:</label
+                            >
+                            <input
+                                type="range"
+                                id="vector-arrow-size"
+                                min="0.1"
+                                max="2"
+                                value="0.8"
+                                step="0.1"
+                            />
+                            <span class="slider-value" id="arrow-size-value"
+                                >0.8</span
+                            >
+                        </div>
+
+                        <div class="controls-group">
+                            <label class="control-label"
+                                >Opções de Visualização:</label
+                            >
+                            <div class="checkbox-group">
+                                <input
+                                    type="checkbox"
+                                    id="vector-colorize"
+                                    checked
+                                />
+                                <label for="vector-colorize"
+                                    >Colorir por magnitude</label
+                                >
+                            </div>
+                            <div class="checkbox-group">
+                                <input
+                                    type="checkbox"
+                                    id="vector-animate"
+                                    checked
+                                />
+                                <label for="vector-animate"
+                                    >Animar partículas</label
+                                >
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn" id="reset-vectors">
+                                Redefinir Campo
+                            </button>
+                            <button class="btn btn-secondary" id="invert-field">
+                                Inverter Direção
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Controles de Sistemas Caóticos -->
+                    <div
+                        id="chaos-controls"
+                        class="controls-group"
+                        style="display: none"
+                    >
+                        <h3 class="section-title">Sistemas Caóticos</h3>
+
+                        <div class="object-selector">
+                            <select class="object-select" id="chaos-type">
+                                <option value="lorenz">
+                                    Atrator de Lorenz
+                                </option>
+                                <option value="rossler">
+                                    Atrator de Rössler
+                                </option>
+                                <option value="henon">Mapa de Hénon</option>
+                                <option value="duffing">
+                                    Oscilador de Duffing
+                                </option>
+                                <option value="chua">Circuito de Chua</option>
+                            </select>
+                            <div
+                                class="object-description"
+                                id="chaos-description"
+                            >
+                                O atrator de Lorenz é um sistema de equações
+                                diferenciais que exibe comportamento caótico,
+                                conhecido por sua forma de borboleta.
+                            </div>
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Parâmetro σ:</label>
+                            <input
+                                type="range"
+                                id="chaos-sigma"
+                                min="5"
+                                max="20"
+                                value="10"
+                                step="0.5"
+                            />
+                            <span class="slider-value" id="sigma-value"
+                                >10.0</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Parâmetro ρ:</label>
+                            <input
+                                type="range"
+                                id="chaos-rho"
+                                min="10"
+                                max="50"
+                                value="28"
+                                step="1"
+                            />
+                            <span class="slider-value" id="rho-value"
+                                >28.0</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Parâmetro β:</label>
+                            <input
+                                type="range"
+                                id="chaos-beta"
+                                min="1"
+                                max="5"
+                                value="2.667"
+                                step="0.1"
+                            />
+                            <span class="slider-value" id="beta-value"
+                                >2.667</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Velocidade:</label>
+                            <input
+                                type="range"
+                                id="chaos-speed"
+                                min="0.1"
+                                max="5"
+                                value="1"
+                                step="0.1"
+                            />
+                            <span class="slider-value" id="speed-value"
+                                >1.0</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label"
+                                >Pontos na Trajetória:</label
+                            >
+                            <input
+                                type="range"
+                                id="chaos-points"
+                                min="1000"
+                                max="10000"
+                                value="5000"
+                                step="500"
+                            />
+                            <span class="slider-value" id="points-value"
+                                >5000</span
+                            >
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn" id="reset-chaos">
+                                Redefinir Trajetória
+                            </button>
+                            <button
+                                class="btn btn-secondary"
+                                id="chaos-params-random"
+                            >
+                                Parâmetros Aleatórios
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Controles de Poliedros -->
+                    <div
+                        id="polyhedra-controls"
+                        class="controls-group"
+                        style="display: none"
+                    >
+                        <h3 class="section-title">Poliedros e Sólidos</h3>
+
+                        <div class="object-selector">
+                            <select class="object-select" id="polyhedra-type">
+                                <option value="tetrahedron">
+                                    Tetraedro (4 faces)
+                                </option>
+                                <option value="cube">Cubo (6 faces)</option>
+                                <option value="octahedron">
+                                    Octaedro (8 faces)
+                                </option>
+                                <option value="dodecahedron">
+                                    Dodecaedro (12 faces)
+                                </option>
+                                <option value="icosahedron">
+                                    Icosaedro (20 faces)
+                                </option>
+                                <option value="truncated_icosahedron">
+                                    Icosaedro Truncado
+                                </option>
+                            </select>
+                            <div
+                                class="object-description"
+                                id="polyhedra-description"
+                            >
+                                Os sólidos platônicos são poliedros regulares e
+                                convexos com faces congruentes. Existem apenas
+                                5: tetraedro, cubo, octaedro, dodecaedro e
+                                icosaedro.
+                            </div>
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Tamanho:</label>
+                            <input
+                                type="range"
+                                id="polyhedra-size"
+                                min="0.5"
+                                max="3"
+                                value="1.5"
+                                step="0.1"
+                            />
+                            <span class="slider-value" id="polyhedra-size-value"
+                                >1.5</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Rotação X:</label>
+                            <input
+                                type="range"
+                                id="polyhedra-rotation-x"
+                                min="0"
+                                max="360"
+                                value="0"
+                                step="1"
+                            />
+                            <span
+                                class="slider-value"
+                                id="polyhedra-rotation-x-value"
+                                >0°</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Rotação Y:</label>
+                            <input
+                                type="range"
+                                id="polyhedra-rotation-y"
+                                min="0"
+                                max="360"
+                                value="0"
+                                step="1"
+                            />
+                            <span
+                                class="slider-value"
+                                id="polyhedra-rotation-y-value"
+                                >0°</span
+                            >
+                        </div>
+
+                        <div class="controls-group">
+                            <label class="control-label"
+                                >Estilo de Renderização:</label
+                            >
+                            <div class="checkbox-group">
+                                <input
+                                    type="checkbox"
+                                    id="polyhedra-wireframe"
+                                    checked
+                                />
+                                <label for="polyhedra-wireframe"
+                                    >Wireframe</label
+                                >
+                            </div>
+                            <div class="checkbox-group">
+                                <input
+                                    type="checkbox"
+                                    id="polyhedra-faces"
+                                    checked
+                                />
+                                <label for="polyhedra-faces"
+                                    >Faces sólidas</label
+                                >
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn" id="animate-polyhedra">
+                                Animar Rotação
+                            </button>
+                            <button
+                                class="btn btn-secondary"
+                                id="random-polyhedra"
+                            >
+                                Poliedro Aleatório
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Controles de Curvas -->
+                    <div
+                        id="curves-controls"
+                        class="controls-group"
+                        style="display: none"
+                    >
+                        <h3 class="section-title">Curvas Paramétricas</h3>
+
+                        <div class="object-selector">
+                            <select class="object-select" id="curve-type">
+                                <option value="spiral">Espiral</option>
+                                <option value="helix">Hélice</option>
+                                <option value="lissajous">
+                                    Figuras de Lissajous
+                                </option>
+                                <option value="rose">Curva Rosa</option>
+                                <option value="cardioid">Cardioide</option>
+                                <option value="lemniscate">Lemniscata</option>
+                            </select>
+                            <div
+                                class="object-description"
+                                id="curve-description"
+                            >
+                                Espirais são curvas que se afastam de um ponto
+                                central enquanto giram em torno dele. São comuns
+                                na natureza, como em conchas e galáxias.
+                            </div>
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Resolução:</label>
+                            <input
+                                type="range"
+                                id="curve-resolution"
+                                min="100"
+                                max="2000"
+                                value="500"
+                                step="50"
+                            />
+                            <span
+                                class="slider-value"
+                                id="curve-resolution-value"
+                                >500</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Parâmetro A:</label>
+                            <input
+                                type="range"
+                                id="curve-param-a"
+                                min="0.1"
+                                max="5"
+                                value="1"
+                                step="0.1"
+                            />
+                            <span class="slider-value" id="curve-param-a-value"
+                                >1.0</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label">Parâmetro B:</label>
+                            <input
+                                type="range"
+                                id="curve-param-b"
+                                min="0.1"
+                                max="5"
+                                value="2"
+                                step="0.1"
+                            />
+                            <span class="slider-value" id="curve-param-b-value"
+                                >2.0</span
+                            >
+                        </div>
+
+                        <div class="slider-container">
+                            <label class="control-label"
+                                >Espessura da Linha:</label
+                            >
+                            <input
+                                type="range"
+                                id="curve-thickness"
+                                min="1"
+                                max="10"
+                                value="3"
+                                step="0.5"
+                            />
+                            <span
+                                class="slider-value"
+                                id="curve-thickness-value"
+                                >3.0</span
+                            >
+                        </div>
+
+                        <div class="controls-group">
+                            <label class="control-label"
+                                >Opções de Visualização:</label
+                            >
+                            <div class="checkbox-group">
+                                <input
+                                    type="checkbox"
+                                    id="curve-animate"
+                                    checked
+                                />
+                                <label for="curve-animate"
+                                    >Animar construção</label
+                                >
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="curve-tube" />
+                                <label for="curve-tube"
+                                    >Renderizar como tubo 3D</label
+                                >
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn" id="draw-curve">
+                                Desenhar Curva
+                            </button>
+                            <button class="btn btn-secondary" id="random-curve">
+                                Curva Aleatória
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-title">Instruções de Uso</div>
+                        <div class="info-text">
+                            <p>
+                                <strong>1.</strong> Selecione uma categoria
+                                acima
+                            </p>
+                            <p>
+                                <strong>2.</strong> Escolha um objeto específico
+                                no menu
+                            </p>
+                            <p>
+                                <strong>3.</strong> Ajuste os parâmetros com os
+                                controles deslizantes
+                            </p>
+                            <p>
+                                <strong>4.</strong> Use o mouse para navegar na
+                                cena 3D: <br />- Arraste para rotacionar <br />-
+                                Scroll para zoom <br />- Botão direito para
+                                mover
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="btn-group" style="margin-top: 25px">
+                        <button class="btn" id="reset-view">
+                            Redefinir Visualização
+                        </button>
+                        <button class="btn btn-secondary" id="toggle-animation">
+                            Pausar Animação
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <footer>
+                <p>
+                    Visualizador de Objetos Matemáticos |
+                    Desenvolvido com Three.js |
+                    Core00009x
+                </p>
+            </footer>
+        </div>
+        <script src="js/script.js"></script>
+    </body>
+</html>
+
+

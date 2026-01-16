@@ -1,0 +1,21 @@
+{
+  "name": "math_vizualizer",
+  "version": "1.0.0",
+  "description": "A math vizualizer app",
+  "keywords": [
+    "math",
+    "tree.js"
+  ],
+  "license": "MIT",
+  "author": "core00009x",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^40.0.0",
+    "treejs": "^0.6.2"
+  }
+}
